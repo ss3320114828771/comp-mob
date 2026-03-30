@@ -86,10 +86,10 @@ export async function GET(
     // Calculate product statistics
     const totalOrders = product.orderItems.length
     const totalRevenue = product.orderItems.reduce(
-      (sum: number, item) => sum + (item.price * item.quantity),
+      (sum: number, item: { price: number; quantity: number }) => sum + (item.price * item.quantity),
       0
     )
-    const averageRating = 4.5 // This would come from a reviews table in real implementation
+    const averageRating = 4.5
 
     return NextResponse.json({
       ...product,
@@ -115,7 +115,6 @@ export async function PUT(
   { params }: { params: Promise<{ productId: string }> }
 ) {
   try {
-    // Check admin authentication
     const adminCheck = await isAdmin(request)
     if (!adminCheck) {
       return NextResponse.json(
@@ -133,7 +132,6 @@ export async function PUT(
       )
     }
 
-    // Check if product exists
     const existingProduct = await prisma.product.findUnique({
       where: { id: productId }
     })
@@ -145,7 +143,6 @@ export async function PUT(
       )
     }
 
-    // Parse and validate request body
     const body = await request.json()
     const validation = updateProductSchema.safeParse(body)
 
@@ -164,7 +161,6 @@ export async function PUT(
 
     const updateData = validation.data
 
-    // Update product
     const updatedProduct = await prisma.product.update({
       where: { id: productId },
       data: updateData,
@@ -176,7 +172,6 @@ export async function PUT(
       }
     })
 
-    // Log the update (for audit trail)
     console.log(`Product ${productId} updated by admin`, {
       productId,
       changes: updateData,
@@ -191,7 +186,6 @@ export async function PUT(
   } catch (error) {
     console.error('Error updating product:', error)
     
-    // Handle specific Prisma errors
     if (error instanceof Error && error.message.includes('Record to update not found')) {
       return NextResponse.json(
         { error: 'Product not found' },
@@ -212,7 +206,6 @@ export async function DELETE(
   { params }: { params: Promise<{ productId: string }> }
 ) {
   try {
-    // Check admin authentication
     const adminCheck = await isAdmin(request)
     if (!adminCheck) {
       return NextResponse.json(
@@ -230,7 +223,6 @@ export async function DELETE(
       )
     }
 
-    // Check if product exists and get its details for audit
     const existingProduct = await prisma.product.findUnique({
       where: { id: productId },
       include: {
@@ -256,7 +248,6 @@ export async function DELETE(
       )
     }
 
-    // Check if product has any orders
     if (existingProduct.orderItems.length > 0) {
       return NextResponse.json(
         { 
@@ -268,12 +259,10 @@ export async function DELETE(
       )
     }
 
-    // Delete product (will cascade delete cart items due to foreign key constraints)
     const deletedProduct = await prisma.product.delete({
       where: { id: productId }
     })
 
-    // Log the deletion (for audit trail)
     console.log(`Product ${productId} deleted by admin`, {
       productId,
       productName: existingProduct.name,
@@ -292,7 +281,6 @@ export async function DELETE(
   } catch (error) {
     console.error('Error deleting product:', error)
     
-    // Handle specific Prisma errors
     if (error instanceof Error && error.message.includes('Foreign key constraint')) {
       return NextResponse.json(
         { 
@@ -323,7 +311,6 @@ export async function PATCH(
   { params }: { params: Promise<{ productId: string }> }
 ) {
   try {
-    // Check admin authentication
     const adminCheck = await isAdmin(request)
     if (!adminCheck) {
       return NextResponse.json(
@@ -341,7 +328,6 @@ export async function PATCH(
       )
     }
 
-    // Check if product exists
     const existingProduct = await prisma.product.findUnique({
       where: { id: productId }
     })
@@ -353,10 +339,7 @@ export async function PATCH(
       )
     }
 
-    // Parse and validate request body (allow partial updates)
     const body = await request.json()
-    
-    // Only validate fields that are present
     const validation = updateProductSchema.partial().safeParse(body)
 
     if (!validation.success) {
@@ -374,7 +357,6 @@ export async function PATCH(
 
     const updateData = validation.data
 
-    // Update product with partial data
     const updatedProduct = await prisma.product.update({
       where: { id: productId },
       data: updateData,
@@ -411,7 +393,6 @@ export async function POST(
   { params }: { params: Promise<{ productId: string }> }
 ) {
   try {
-    // Check admin authentication
     const adminCheck = await isAdmin(request)
     if (!adminCheck) {
       return NextResponse.json(
@@ -438,7 +419,6 @@ export async function POST(
       )
     }
 
-    // Get current product
     const product = await prisma.product.findUnique({
       where: { id: productId },
       select: { stock: true, name: true }
@@ -454,7 +434,6 @@ export async function POST(
     let newStock: number
     let operationType: string
 
-    // Handle different operations
     if (operation === 'add') {
       newStock = product.stock + quantity
       operationType = 'added'
@@ -471,12 +450,10 @@ export async function POST(
       newStock = quantity
       operationType = 'set to'
     } else {
-      // Default: set directly
       newStock = quantity
       operationType = 'set to'
     }
 
-    // Update stock
     const updatedProduct = await prisma.product.update({
       where: { id: productId },
       data: { stock: newStock },
@@ -488,7 +465,6 @@ export async function POST(
       }
     })
 
-    // Log stock change
     console.log(`Stock ${operationType} for product ${productId}`, {
       productId,
       productName: product.name,
