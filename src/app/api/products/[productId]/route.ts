@@ -86,7 +86,7 @@ export async function GET(
     // Calculate product statistics
     const totalOrders = product.orderItems.length
     const totalRevenue = product.orderItems.reduce(
-      (sum, item) => sum + (item.price * item.quantity),
+      (sum: number, item) => sum + (item.price * item.quantity),
       0
     )
     const averageRating = 4.5 // This would come from a reviews table in real implementation
