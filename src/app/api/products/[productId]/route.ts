@@ -28,10 +28,10 @@ async function isAdmin(request: NextRequest): Promise<boolean> {
 // GET /api/products/[productId] - Get single product
 export async function GET(
   request: NextRequest,
-  { params }: { params: { productId: string } }
+  { params }: { params: Promise<{ productId: string }> }
 ) {
   try {
-    const { productId } = params
+    const { productId } = await params
 
     if (!productId) {
       return NextResponse.json(
@@ -112,7 +112,7 @@ export async function GET(
 // PUT /api/products/[productId] - Update product (Admin only)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { productId: string } }
+  { params }: { params: Promise<{ productId: string }> }
 ) {
   try {
     // Check admin authentication
@@ -124,7 +124,7 @@ export async function PUT(
       )
     }
 
-    const { productId } = params
+    const { productId } = await params
 
     if (!productId) {
       return NextResponse.json(
@@ -209,7 +209,7 @@ export async function PUT(
 // DELETE /api/products/[productId] - Delete product (Admin only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { productId: string } }
+  { params }: { params: Promise<{ productId: string }> }
 ) {
   try {
     // Check admin authentication
@@ -221,7 +221,7 @@ export async function DELETE(
       )
     }
 
-    const { productId } = params
+    const { productId } = await params
 
     if (!productId) {
       return NextResponse.json(
@@ -320,7 +320,7 @@ export async function DELETE(
 // PATCH /api/products/[productId] - Partial update (Admin only)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { productId: string } }
+  { params }: { params: Promise<{ productId: string }> }
 ) {
   try {
     // Check admin authentication
@@ -332,7 +332,7 @@ export async function PATCH(
       )
     }
 
-    const { productId } = params
+    const { productId } = await params
 
     if (!productId) {
       return NextResponse.json(
@@ -408,7 +408,7 @@ export async function PATCH(
 // POST /api/products/[productId]/stock - Update stock quantity (Admin only)
 export async function POST(
   request: NextRequest,
-  { params }: { params: { productId: string } }
+  { params }: { params: Promise<{ productId: string }> }
 ) {
   try {
     // Check admin authentication
@@ -420,7 +420,7 @@ export async function POST(
       )
     }
 
-    const { productId } = params
+    const { productId } = await params
     const body = await request.json()
     const { quantity, operation } = body
 
